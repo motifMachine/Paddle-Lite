@@ -79,28 +79,31 @@ void conv_3x3s1_direct_fp32(const float* i_data,
   auto act_param = param.activation_param;
 
   const int pad_h = paddings[0];
-  const int pad_w = paddings[2];
-  const int wout_round = ROUNDUP(ow, OUT_W_BLOCK);
-  const int win_round = wout_round + 2;
+  const int pad_w = paddings[2]; //应该是padding[1]?
+  const int wout_round = ROUNDUP(ow, OUT_W_BLOCK); //对output在W方向做padding，使其为4的倍数。
+  const int win_round = wout_round + 2; //与output相关的input的大小 eg. 4*4 feature map 经过3*3卷积后结果为 2*2
   bool flag_relu = param.fuse_relu;
   bool flag_bias = param.bias != nullptr;
 
   int hout_r_block = (l2_size - 2 * win_round * ic) /
                      (win_round * ic + OUT_C_BLOCK * wout_round * threads);
+                     // 通过cache大小来确定 output tiling的大小，OUT_C_BLOCK * wout_round * threads为每次tilling
+                     // 中输出所占存储。
+                     // 为什么要减去2*win_round*ic? 
   hout_r_block = hout_r_block > oh ? oh : hout_r_block;
   hout_r_block = (hout_r_block / OUT_H_BLOCK) * OUT_H_BLOCK;
-  hout_r_block = hout_r_block < OUT_H_BLOCK ? OUT_H_BLOCK : hout_r_block;
+  hout_r_block = hout_r_block < OUT_H_BLOCK ? OUT_H_BLOCK : hout_r_block;  //hout_r_block为output在H方向tiling的大小，需为2的倍数
 
-  const int hin_r_block = hout_r_block + 2;
+  const int hin_r_block = hout_r_block + 2; //input在H方向tiling的大小
 
-  float* tmp_work_space = ctx->workspace_data<float>();
+  float* tmp_work_space = ctx->workspace_data<float>(); //size 有多大？在哪判定的？
   float ptr_zero[win_round];  // NOLINT
   memset(ptr_zero, 0, sizeof(float) * win_round);
   float ptr_write[wout_round];  // NOLINT
 
-  int in_len = win_round * ic;
-  int pre_in_size = hin_r_block * in_len;
-  int pre_out_size = OUT_C_BLOCK * hout_r_block * wout_round;
+  int in_len = win_round * ic; //input 每次读取一行的大小(包括了channel纬度)
+  int pre_in_size = hin_r_block * in_len; //每次tiling compute读取input的大小
+  int pre_out_size = OUT_C_BLOCK * hout_r_block * wout_round; //每次tiling compute为ouptut预留的大小
 
   float* pre_din = tmp_work_space;
 
@@ -111,7 +114,7 @@ void conv_3x3s1_direct_fp32(const float* i_data,
 
   int ws = -pad_w;
   int we = ws + win_round;
-  int w_loop = wout_round / 4;
+  int w_loop = wout_round / 4; // tiling 从output层次看，分块为 [OUT_C_BLOCK:4, hout_r_block, 4]
 
   int c_remain = oc - (oc / OUT_C_BLOCK) * OUT_C_BLOCK;
   int c_round_down = (oc / OUT_C_BLOCK) * OUT_C_BLOCK;
@@ -125,8 +128,8 @@ void conv_3x3s1_direct_fp32(const float* i_data,
       if (h + hout_r_block > oh) {
         h_kernel = oh - h;
       }
-      int hs = h - pad_h;
-      int he = hs + h_kernel + 2;
+      int hs = h - pad_h;  //output 实际数据的height
+      int he = hs + h_kernel + 2;  // input，相对于output而言要+2
       prepack_input_nxw(
           din_batch, pre_din, 0, ic, hs, he, ws, we, ic, win, ih, ptr_zero);
 #pragma omp parallel for num_threads(threads)
@@ -138,11 +141,11 @@ void conv_3x3s1_direct_fp32(const float* i_data,
         float* pre_out = pre_din + pre_in_size;
 #endif
         const float* block_inr0 = pre_din;
-        const float* block_inr1 = block_inr0 + in_len;
+        const float* block_inr1 = block_inr0 + in_len; // in_len = win_round * ic
         const float* block_inr2 = block_inr1 + in_len;
         const float* block_inr3 = block_inr2 + in_len;
 
-        const float* weight_c = weights + c * w_stride;
+        const float* weight_c = weights + c * w_stride; //w_stride  = ic * 9
         const float* bias_ptr = ptr_zero;
         if (flag_bias) {
           bias_ptr = bias + c;
@@ -183,10 +186,10 @@ void conv_3x3s1_direct_fp32(const float* i_data,
             int cnt = w_loop;
             // clang-format off
             asm volatile(
-            "ldp    q15, q16, [%[ptr_out0]]\n" /* load outr00,outr01*/
+            "ldp    q15, q16, [%[ptr_out0]]\n" /* load outr00, outr01*/
             "ldp    q17, q18, [%[ptr_out0], #32]\n" /* load outr02, outr03*/
             "ldp    q19, q20, [%[ptr_out1]]     \n" /* load outr10, outr11*/
-            "ldp    q21, q22, [%[ptr_out1], #32]\n" /* load outr10, outr11*/
+            "ldp    q21, q22, [%[ptr_out1], #32]\n" /* load outr12, outr13*/
             "ldp    q0, q1,   [%[r0]], #16      \n" /* load input r0*/
             "ldp    q2, q3,   [%[r1]], #16      \n" /* load input r1*/
             "2:                                 \n" /* main loop*/
