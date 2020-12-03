@@ -2980,17 +2980,17 @@ void sgemm_prepacked_8x12(bool is_transB,
     }
   }
   //! MBLOCK * x (result) + MBLOCK * k (A) + x * k (B) = l2
-  int x_block = (l2_cache - (MBLOCK * K)) / (sizeof(float) * (K + MBLOCK));
+  int x_block = (l2_cache - (MBLOCK * K)) / (sizeof(float) * (K + MBLOCK)); \\Mblock=8
   x_block /= NBLOCK;
   x_block *= NBLOCK;
   int x_num = (N + (x_block - 1)) / x_block;
   x_block = (N + x_num - 1) / x_num;
   x_block = (x_block + NBLOCK - 1) / NBLOCK;
   x_block *= NBLOCK;
-  x_block = x_block < NBLOCK ? NBLOCK : x_block;
+  x_block = x_block < NBLOCK ? NBLOCK : x_block;\\ x_block 为 NBLOCK=12的倍数，向上取整
 
   // unroll 2 loop
-  int tail_pre = (K & (KBLOCK - 1));
+  int tail_pre = (K & (KBLOCK - 1)); \\tail_pre = K % KBLOCK
   int k_pre = ((K + KBLOCK - 1) / KBLOCK) - 1;
 
   bool flag_p_remain = false;
@@ -3007,8 +3007,8 @@ void sgemm_prepacked_8x12(bool is_transB,
     if (xmax > N) {
       xmax = N;
     }
-    int bblocks = (xmax - x0 + NBLOCK - 1) / NBLOCK;
-    remain = xmax - x0 - (bblocks - 1) * NBLOCK;
+    int bblocks = (xmax - x0 + NBLOCK - 1) / NBLOCK; \\ 按照x_block为步长计算完后还有bblocks个NBlock的数据要计算
+    remain = xmax - x0 - (bblocks - 1) * NBLOCK; \\ 按照NBLOCK为步长计算完后还有bblocks个remain个数据要计算
     if (remain > 0) {
       flag_p_remain = true;
     }
@@ -3038,7 +3038,7 @@ void sgemm_prepacked_8x12(bool is_transB,
         bias_local[7] = bias[y + 7];
       }
 
-      float cout0[NBLOCK];
+      float cout0[NBLOCK]; \\N_BLOCK=12
       float cout1[NBLOCK];
       float cout2[NBLOCK];
       float cout3[NBLOCK];
@@ -3120,8 +3120,8 @@ void sgemm_prepacked_8x12(bool is_transB,
           }
         }
         const float *a_ptr = a_ptr_l;
-        int tail = tail_pre;
-        int k = k_pre;
+        int tail = tail_pre; \\tail = K % KBLOCK
+        int k = k_pre; \\ K dim上需循环迭代 k 次
         // clang-format off
         asm volatile(
             "prfm   pldl1keep, [%[a_ptr]]\n"       /* preload a*/
