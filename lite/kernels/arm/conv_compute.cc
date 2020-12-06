@@ -20,6 +20,7 @@
 #include "lite/kernels/arm/conv_direct.h"
 #include "lite/kernels/arm/conv_gemmlike.h"
 #include "lite/kernels/arm/conv_winograd.h"
+#include "lite/kernels/arm/conv_patdnn.h"
 
 namespace paddle {
 namespace lite {
@@ -69,6 +70,9 @@ void ConvCompute<PRECISION(kFloat), PRECISION(kFloat)>::PrepareForRun() {
              no_dilation) {
     impl_ = new WinogradConv<PRECISION(kFloat), PRECISION(kFloat)>;
     // VLOG(3) << "invoking winograd conv";
+  } else if(param.groups == 1 && kw == 3 && stride == 2 && ks_equal && no_dilation){
+    impl_ = new PatDNNConv<PRECISION(kfloat), PRECISION(kFloat)>;
+    // VLOG(3) << "invoking patdnn conv"
   } else if (param.groups == 1 && kw == 3 && stride == 2 &&
              chin * chout < 4 * hin * win && ks_equal && no_dilation) {
     impl_ = new DirectConv<PRECISION(kFloat), PRECISION(kFloat)>;
