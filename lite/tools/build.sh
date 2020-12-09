@@ -157,7 +157,7 @@ function make_tiny_publish_so {
       -DRKNPU_DDK_ROOT=$RKNPU_DDK_ROOT \
       -DARM_TARGET_OS=${os} -DARM_TARGET_ARCH_ABI=${abi} -DARM_TARGET_LANG=${lang}
 
-  make publish_inference -j$NUM_PROC
+  make publish_inference -j16
   cd - > /dev/null
 }
 

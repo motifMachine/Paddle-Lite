@@ -29,6 +29,7 @@
 #include "lite/backends/arm/math/clip.h"
 #include "lite/backends/arm/math/col_im_transform.h"
 #include "lite/backends/arm/math/concat.h"
+#include "lite/backends/arm/math/conv3x3s1_patdnn_fp32.h"
 #include "lite/backends/arm/math/conv_block_utils.h"
 #include "lite/backends/arm/math/conv_impl.h"
 #include "lite/backends/arm/math/conv_transpose_depthwise.h"
