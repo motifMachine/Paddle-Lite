@@ -63,7 +63,7 @@ inline bool init_test_sparse_format(std::vector<int>* offset_array,
 
   // init index array
   bool* flag;
-  flag = reinterpret_cast<bool*> malloc(sizeof(bool) * ic);
+  flag = reinterpret_cast<bool*>(malloc(sizeof(bool) * ic));
   memset(flag, false, sizeof(bool) * ic);
   unsigned int seed = 1;
   for (int i = 0; i < oc; i++) {
@@ -140,10 +140,10 @@ class PatDNNConv : public KernelLite<TARGET(kARM), Ptype> {
     int kh = w_dims[2];
     CHECK(sw == 1 || sw == 2) << "patdnn conv only support conv3x3s1";
     CHECK(kw == 3 && kh == 3) << "patdnn conv only support conv3x3s1";
-    init_test_sparse_format(offset_array,
-                            reorder_array,
-                            index_array,
-                            stride_array,
+    init_test_sparse_format(&offset_array,
+                            &reorder_array,
+                            &index_array,
+                            &stride_array,
                             oc,
                             ic,
                             group_size);
