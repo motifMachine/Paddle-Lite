@@ -154,11 +154,6 @@ void conv_3x3s1_patdnn_fp32(const float* i_data,
             float32x4_t w1 = vld1q_f32(wc0 + 4);   // w1, v24
             float32x4_t w2 = vld1q_f32(wc0 + 8);   // w2, v25
             float32x4_t w3 = vld1q_f32(wc0 + 12);  // w3, v26
-            float32x4_t w4 = vld1q_f32(wc0 + 16);  // w4, v27
-            float32x4_t w5 = vld1q_f32(wc0 + 20);  // w5, v28
-            float32x4_t w6 = vld1q_f32(wc0 + 24);  // w6, v29
-            float32x4_t w7 = vld1q_f32(wc0 + 28);  // w7, v30
-            float32x4_t w8 = vld1q_f32(wc0 + 32);  // w8, v31
 
             const float* r0 = inr0;
             const float* r1 = inr1;
@@ -203,72 +198,29 @@ void conv_3x3s1_patdnn_fp32(const float* i_data,
             "fmla   v20.4s ,  %[w2].4s,  v2.s[3]\n" /* outr11 = w2 * r1[3]*/
             "fmla   v21.4s ,  %[w2].4s,  v3.s[0]\n" /* outr12 = w2 * r1[4]*/
             "fmla   v22.4s ,  %[w2].4s,  v3.s[1]\n" /* outr13 = w2 * r1[5]*/
+            "ldp    q0, q1,   [%[r0]], #16      \n" /* load next input r0*/
             /*  r1, r2, mul w3, get out r0, r1 */
             "fmla   v15.4s ,  %[w3].4s,  v2.s[0]\n" /* outr00 = w3 * r1[0]*/
             "fmla   v16.4s ,  %[w3].4s,  v2.s[1]\n" /* outr01 = w3 * r1[1]*/
+            
             "fmla   v17.4s ,  %[w3].4s,  v2.s[2]\n" /* outr02 = w3 * r1[2]*/
             "fmla   v18.4s ,  %[w3].4s,  v2.s[3]\n" /* outr03 = w3 * r1[3]*/
-            "fmla   v19.4s ,  %[w3].4s,  v4.s[0]\n" /* outr10 = w3 * r2[0]*/
-            "fmla   v20.4s ,  %[w3].4s,  v4.s[1]\n" /* outr11 = w3 * r2[1]*/
-            "fmla   v21.4s ,  %[w3].4s,  v4.s[2]\n" /* outr12 = w3 * r2[2]*/
-            "fmla   v22.4s ,  %[w3].4s,  v4.s[3]\n" /* outr13 = w3 * r2[3]*/
-            "ldp    q0, q1,   [%[r0]], #16      \n" /* load next input r0*/
-            /*  r1, r2, mul w4, get out r0, r1 */
-            "fmla   v15.4s ,  %[w4].4s,  v2.s[1]\n" /* outr00 = w4 * r1[1]*/
-            "fmla   v16.4s ,  %[w4].4s,  v2.s[2]\n" /* outr01 = w4 * r1[2]*/
-            "fmla   v17.4s ,  %[w4].4s,  v2.s[3]\n" /* outr02 = w4 * r1[3]*/
-            "fmla   v18.4s ,  %[w4].4s,  v3.s[0]\n" /* outr03 = w4 * r1[4]*/
-            "fmla   v19.4s ,  %[w4].4s,  v4.s[1]\n" /* outr10 = w4 * r2[1]*/
-            "fmla   v20.4s ,  %[w4].4s,  v4.s[2]\n" /* outr11 = w4 * r2[2]*/
-            "fmla   v21.4s ,  %[w4].4s,  v4.s[3]\n" /* outr12 = w4 * r2[3]*/
-            "fmla   v22.4s ,  %[w4].4s,  v5.s[0]\n" /* outr13 = w4 * r2[4]*/
-            "ldp    q6, q7,   [%[r3]], #16      \n" /* load input r3*/
-            /*  r1, r2, mul w5, get out r0, r1 */
-            "fmla   v15.4s ,  %[w5].4s,  v2.s[2]\n" /* outr00 = w5 * r1[2]*/
-            "fmla   v16.4s ,  %[w5].4s,  v2.s[3]\n" /* outr01 = w5 * r1[3]*/
-            "fmla   v17.4s ,  %[w5].4s,  v3.s[0]\n" /* outr02 = w5 * r1[4]*/
-            "fmla   v18.4s ,  %[w5].4s,  v3.s[1]\n" /* outr03 = w5 * r1[5]*/
-            "fmla   v19.4s ,  %[w5].4s,  v4.s[2]\n" /* outr10 = w5 * r2[2]*/
-            "fmla   v20.4s ,  %[w5].4s,  v4.s[3]\n" /* outr11 = w5 * r2[3]*/
-            "fmla   v21.4s ,  %[w5].4s,  v5.s[0]\n" /* outr12 = w5 * r2[4]*/
-            "fmla   v22.4s ,  %[w5].4s,  v5.s[1]\n" /* outr13 = w5 * r2[5]*/
-            /*  r2, r3, mul w6, get out r0, r1 */
-            "fmla   v15.4s ,  %[w6].4s,  v4.s[0]\n" /* outr00 = w6 * r2[0]*/
-            "fmla   v16.4s ,  %[w6].4s,  v4.s[1]\n" /* outr01 = w6 * r2[1]*/
-            "fmla   v17.4s ,  %[w6].4s,  v4.s[2]\n" /* outr02 = w6 * r2[2]*/
-            "fmla   v18.4s ,  %[w6].4s,  v4.s[3]\n" /* outr03 = w6 * r2[3]*/
-            "fmla   v19.4s ,  %[w6].4s,  v6.s[0]\n" /* outr10 = w6 * r3[0]*/
-            "fmla   v20.4s ,  %[w6].4s,  v6.s[1]\n" /* outr11 = w6 * r3[1]*/
-            "fmla   v21.4s ,  %[w6].4s,  v6.s[2]\n" /* outr12 = w6 * r3[2]*/
-            "fmla   v22.4s ,  %[w6].4s,  v6.s[3]\n" /* outr13 = w6 * r3[3]*/
-            "ldp    q2, q3,   [%[r1]], #16      \n" /* load next input r1*/
-            /*  r2, r3, mul w7, get out r0, r1 */
-            "fmla   v15.4s ,  %[w7].4s,  v4.s[1]\n" /* outr00 = w7 * r2[1]*/
-            "fmla   v16.4s ,  %[w7].4s,  v4.s[2]\n" /* outr01 = w7 * r2[2]*/
-            "fmla   v17.4s ,  %[w7].4s,  v4.s[3]\n" /* outr02 = w7 * r2[3]*/
-            "fmla   v18.4s ,  %[w7].4s,  v5.s[0]\n" /* outr03 = w7 * r2[4]*/
-            "fmla   v19.4s ,  %[w7].4s,  v6.s[1]\n" /* outr10 = w7 * r3[1]*/
-            "fmla   v20.4s ,  %[w7].4s,  v6.s[2]\n" /* outr11 = w7 * r3[2]*/
-            "fmla   v21.4s ,  %[w7].4s,  v6.s[3]\n" /* outr12 = w7 * r3[3]*/
-            "fmla   v22.4s ,  %[w7].4s,  v7.s[0]\n" /* outr13 = w7 * r3[4]*/
-            "subs   %w[cnt], %w[cnt], #1        \n" /*loop count -1*/
-            /*  r2, r3, mul w8, get out r0, r1 */
-            "fmla   v15.4s ,  %[w8].4s,  v4.s[2]\n" /* outr00 = w8 * r2[2]*/
-            "fmla   v16.4s ,  %[w8].4s,  v4.s[3]\n" /* outr01 = w8 * r2[3]*/
-            "fmla   v17.4s ,  %[w8].4s,  v5.s[0]\n" /* outr02 = w8 * r2[0]*/
-            "fmla   v18.4s ,  %[w8].4s,  v5.s[1]\n" /* outr03 = w8 * r2[1]*/
             "stp    q15, q16, [%[ptr_out0]], #32\n" /* save outr00, outr01*/
-            "fmla   v19.4s ,  %[w8].4s,  v6.s[2]\n" /* outr10 = w8 * r3[2]*/
-            "stp    q17, q18, [%[ptr_out0]], #32\n" /* save outr02, outr03*/
-            "fmla   v20.4s ,  %[w8].4s,  v6.s[3]\n" /* outr11 = w8 * r3[3]*/
+            "fmla   v19.4s ,  %[w3].4s,  v4.s[0]\n" /* outr10 = w3 * r2[0]*/
             "ldp    q15, q16, [%[ptr_out0]]     \n" /* load outr00, outr01*/
-            "fmla   v21.4s ,  %[w8].4s,  v7.s[0]\n" /* outr12 = w8 * r3[0]*/
+            "fmla   v20.4s ,  %[w3].4s,  v4.s[1]\n" /* outr11 = w3 * r2[1]*/
+            "stp    q17, q18, [%[ptr_out0]], #32\n" /* save outr02, outr03*/
+            "fmla   v21.4s ,  %[w3].4s,  v4.s[2]\n" /* outr12 = w3 * r2[2]*/
             "ldp    q17, q18, [%[ptr_out0], #32]\n" /* load outr02, outr03*/
-            "fmla   v22.4s ,  %[w8].4s,  v7.s[1]\n" /* outr13 = w8 * r3[1]*/
+            "fmla   v22.4s ,  %[w3].4s,  v4.s[3]\n" /* outr13 = w3 * r2[3]*/
             "stp    q19, q20, [%[ptr_out1]], #32\n" /* save outr10, outr11*/
             "stp    q21, q22, [%[ptr_out1]], #32\n" /* save outr12, outr13*/
             "ldp    q19, q20, [%[ptr_out1]]     \n" /* load outr10, outr11*/
             "ldp    q21, q22, [%[ptr_out1], #32]\n" /* load outr12, outr13*/
+            "ldp    q2, q3,   [%[r1]], #16      \n" /* load next input r1*/
+            "subs   %w[cnt], %w[cnt], #1        \n" /*loop count -1*/
+            /*  r2, r3, mul w8, get out r0, r1 */
+            
             "bne    2b                          \n" /* jump to main loop*/
             : [cnt] "+r"(cnt),
               [r0] "+r"(r0),[r1] "+r"(r1),
@@ -276,15 +228,14 @@ void conv_3x3s1_patdnn_fp32(const float* i_data,
               [ptr_out0] "+r"(ptr_out0),
               [ptr_out1] "+r"(ptr_out1)
             : [w0] "w"(w0),[w1] "w"(w1),[w2] "w"(w2),
-              [w3] "w"(w3),[w4] "w"(w4),[w5] "w"(w5),
-              [w6] "w"(w6),[w7] "w"(w7),[w8] "w"(w8)
+              [w3] "w"(w3)
             : "cc","memory","v0","v1","v2","v3",
               "v4","v5","v6","v7","v15","v16",
               "v17","v18","v19","v20","v21","v22"
             );
             // clang-format on
 
-            wc0 += 9 * OUT_C_BLOCK;
+            wc0 += 4 * OUT_C_BLOCK;
             inr0 += win_round;
             inr1 += win_round;
             inr2 += win_round;
