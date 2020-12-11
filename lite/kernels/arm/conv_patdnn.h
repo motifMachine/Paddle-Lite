@@ -93,7 +93,7 @@ inline bool init_test_sparse_format(std::vector<int>* offset_array,
 }
 
 template <PrecisionType Ptype, PrecisionType OutType>
-inline bool direct_conv_trans_weights(
+inline bool patdnn_conv_trans_weights(
     const Tensor* win,
     Tensor* wout,
     const Tensor* bin,
@@ -102,19 +102,20 @@ inline bool direct_conv_trans_weights(
     const std::vector<float>& w_scale,
     float in_scale,
     float out_scale,
+    int group_size,
+    int kernel_size,
     std::vector<float>& merge_scale,  // NOLINT
     float* relu_clipped_coef) {
-  constexpr int cblock = 4;
   int oc = win->dims()[0];
   int ic = win->dims()[1];
   int kh = win->dims()[2];
   int kw = win->dims()[3];
-  int cround = ROUNDUP(oc, cblock);
-  wout->Resize({cround, ic, kh, kw});
+  int group_round = ROUNDUP(oc, group_size);
+  wout->Resize({group_round, ic, kh, kw});
   auto w_in_data = win->data<float>();
   auto transed_w_data = wout->mutable_data<float>();
   lite::arm::math::conv_trans_weights_numc(
-      w_in_data, transed_w_data, oc, ic, cblock, kh * kw);
+      w_in_data, transed_w_data, oc, ic, group_size, kernel_size);
   return false;
 }
 
@@ -147,7 +148,7 @@ class PatDNNConv : public KernelLite<TARGET(kARM), Ptype> {
                             oc,
                             ic,
                             group_size);
-    flag_trans_bias_ = direct_conv_trans_weights<Ptype, OutType>(
+    flag_trans_bias_ = patdnn_conv_trans_weights<Ptype, OutType>(
         param.filter,
         &weights_,
         param.bias,
@@ -156,6 +157,8 @@ class PatDNNConv : public KernelLite<TARGET(kARM), Ptype> {
         param.weight_scale,
         param.input_scale,
         param.output_scale,
+        group_size,
+        4, // kernel_size in patdnn
         w_scale_,
         &param.activation_param.Relu_clipped_coef);
   }

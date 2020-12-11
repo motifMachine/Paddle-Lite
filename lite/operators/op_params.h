@@ -484,6 +484,8 @@ struct ConvParam : ParamBase {
   std::vector<int> output_padding;
   // for int8
   WITH_INT8_CONFIG
+  // for patdnn sparse conv
+  bool patdnn_sparse{false};
 
   ///////////////////////////////////////////////////////////////////////////////////
   // get a vector of input tensors

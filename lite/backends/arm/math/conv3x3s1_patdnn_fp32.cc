@@ -123,7 +123,7 @@ void conv_3x3s1_patdnn_fp32(const float* i_data,
         const float* block_inr3 = block_inr2 + in_len;
 
         const float* weight_c =
-            weights + offset_array[c / group_size];  // 根据offset的内容
+            weights + c * w_stride;  // 根据offset的内容
         // 计算得到每个group所对应的权重起始地址
         const float* bias_ptr = ptr_zero;
         if (flag_bias) {
@@ -132,7 +132,7 @@ void conv_3x3s1_patdnn_fp32(const float* i_data,
         fill_packed_biasc4(
             pre_out,
             bias_ptr,
-            wout_round * OUT_C_BLOCK *
+            wout_round * group_size *
                 h_kernel);  // 提前add bias，应该不用改，没读过源码，待check
 
         for (int hk = 0; hk < h_kernel; hk += OUT_H_BLOCK) {

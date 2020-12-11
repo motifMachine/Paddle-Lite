@@ -17,6 +17,7 @@
 #include "lite/core/op_registry.h"
 #include "lite/core/type_system.h"
 #include "lite/kernels/arm/conv_depthwise.h"
+#include "lite/kernels/arm/conv_patdnn.h"
 #include "lite/kernels/arm/conv_direct.h"
 #include "lite/kernels/arm/conv_gemmlike.h"
 #include "lite/kernels/arm/conv_winograd.h"
@@ -62,20 +63,25 @@ void ConvCompute<PRECISION(kFloat), PRECISION(kFloat)>::PrepareForRun() {
   bool flag_dw = flag_dw_3x3 || flag_dw_5x5;
 
   /// select conv impl
-  if (param.groups == ic && ic == oc && ks_equal && no_dilation && flag_dw) {
+  if (param.patdnn_sparse)
+  {
+    impl_ = new PatDNNConv<PRECISION(kFloat), PRECISION(kFloat)>;
+    VLOG(3) << "invoking patdnn conv";
+  }
+  else if (param.groups == ic && ic == oc && ks_equal && no_dilation && flag_dw) {
     impl_ = new DepthwiseConv<PRECISION(kFloat), PRECISION(kFloat)>;
-    // VLOG(3) << "invoking dw conv";
+    VLOG(3) << "invoking dw conv";
   } else if (param.groups == 1 && kw == 3 && stride == 1 && ks_equal &&
              no_dilation) {
     impl_ = new WinogradConv<PRECISION(kFloat), PRECISION(kFloat)>;
-    // VLOG(3) << "invoking winograd conv";
+    VLOG(3) << "invoking winograd conv";
   } else if (param.groups == 1 && kw == 3 && stride == 2 &&
              chin * chout < 4 * hin * win && ks_equal && no_dilation) {
     impl_ = new DirectConv<PRECISION(kFloat), PRECISION(kFloat)>;
-    // VLOG(3) << "invoking direct conv";
+    VLOG(3) << "invoking direct conv";
   } else {
     impl_ = new GemmLikeConv<PRECISION(kFloat), PRECISION(kFloat)>;
-    // VLOG(3) << "invoking gemm like conv";
+    VLOG(3) << "invoking gemm like conv";
   }
   impl_->SetContext(std::move(this->ctx_));
   impl_->SetParam(param);
