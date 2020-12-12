@@ -243,3 +243,6 @@ class ConvComputeTester : public arena::TestCase {
     }
   }
 };
+
+}  // namespace lite
+}  // namespace paddle
