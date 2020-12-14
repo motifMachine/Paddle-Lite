@@ -212,6 +212,7 @@ class ConvComputeTester : public arena::TestCase {
     op_desc->SetAttr("paddings", paddings_);
     op_desc->SetAttr("groups", groups_);
     op_desc->SetAttr("dilations", dilations_);
+    op_desc->SetAttr("patdnn_sparse", true);
     if (!padding_algorithm_.empty()) {
       op_desc->SetAttr("padding_algorithm", padding_algorithm_);
     }
