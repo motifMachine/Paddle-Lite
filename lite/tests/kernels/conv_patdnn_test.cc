@@ -244,5 +244,35 @@ class ConvComputeTester : public arena::TestCase {
   }
 };
 
+void TestPatDNNConvKsize(Place place, float abs_error = 2e-5) {
+  for (auto dims :
+       std::vector<std::vector<int64_t>>{{1, 2, 7, 8}, {5, 6, 17, 18}}) {
+    for (auto out_channels : {1, 3}) {
+      for (auto ksize : {1, 3, 5, 7}) {
+        std::unique_ptr<arena::TestCase> tester(new ConvComputeTester(
+            place, "def", DDim(dims), out_channels, ksize));
+        arena::Arena arena(std::move(tester), place, abs_error);
+        arena.TestPrecision();
+      }
+    }
+  }
+}
+
+TEST(Conv2d, precision) {
+  float abs_error = 2e-5;
+  Place place;
+#if defined(LITE_WITH_NPU)
+  place = TARGET(kNPU);
+  abs_error = 5e-2;  // Using fp16 in NPU
+#elif defined(LITE_WITH_HUAWEI_ASCEND_NPU)
+  place = TARGET(kHuaweiAscendNPU);
+  abs_error = 1e-2;  // precision_mode default is force_fp16
+#else
+  return;
+#endif
+
+  TestPatDNNConvKsize(place, abs_error);
+}
+
 }  // namespace lite
 }  // namespace paddle

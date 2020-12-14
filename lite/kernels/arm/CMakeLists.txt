@@ -14,7 +14,7 @@ add_kernel(conv_patdnn ARM basic SRCS conv_patdnn.cc DEPS ${lite_kernel_deps} ma
 add_kernel(conv_gemmlike ARM basic SRCS conv_gemmlike.cc DEPS ${lite_kernel_deps} math_arm)
 add_kernel(conv_winograd ARM basic SRCS conv_winograd.cc DEPS ${lite_kernel_deps} math_arm)
 add_kernel(conv_compute_arm ARM basic SRCS conv_compute.cc DEPS ${lite_kernel_deps}
-        conv_depthwise conv_direct conv_gemmlike conv_winograd)
+        conv_depthwise conv_direct conv_gemmlike conv_winograd conv_patdnn)
 
 add_kernel(fc_compute_arm ARM basic SRCS fc_compute.cc DEPS ${lite_kernel_deps} math_arm)
 add_kernel(activation_compute_arm ARM basic SRCS activation_compute.cc DEPS ${lite_kernel_deps} math_arm)
